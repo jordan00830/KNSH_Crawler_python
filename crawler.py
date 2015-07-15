@@ -228,7 +228,7 @@ class crawler:
             #             數學    |     |   v  |     |　   |
             #             生活    |     |      |  v  |　   |
             else:
-                eachCourseBook = {'publisherName': None , 'courseName': None }
+                eachCourseBook = {'publisherName': '' , 'courseName': '' }
                 for idx,courseCol in enumerate(row.find_all('td')):
                     if idx == 0:
                         eachCourseBook["courseName"] = courseCol.get_text()
