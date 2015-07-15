@@ -68,7 +68,7 @@ class crawler:
                         self.__printFinalResultText(semester['semesterText'],country['countryName'], school['schoolAddr'], grade, bookList)
                         
     def crawlByUserDefine(self):
-        with open('conf/courseFilter.json') as fp:
+        with open('conf/COURSE_FILTER.json') as fp:
             courseFilter = json.load(fp, object_pairs_hook=collections.OrderedDict)
         
         print 'Fetching semester && country information...\n'
