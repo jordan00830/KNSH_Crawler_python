@@ -27,16 +27,16 @@ def main():
     # KNSHCrawler.crawlAll()
     # KNSHCrawler.crawlByUserDefine()
 
-    print "\nWhich crawl mode do you want to crawl?\n\n"\
-        "1. crawl all courses (only for testing, this choice will not write output file) \n"\
-        "2. crawl customized courses\n"\
+    print '\nWhich crawl mode do you want to crawl?\n\n'\
+        '1. crawl all courses (only for testing, this choice will not write output file) \n'\
+        '2. crawl customized courses\n'\
 
-    crawlMode = raw_input("Enter the choice: ")
+    crawlMode = raw_input('Enter the choice: ')
 
-    print "\nWhich output mode do you want?\n\n"\
-        "1. write chinese directly\n"\
-        "2. write abbreviation defined in config\n"
-    outputMode = raw_input("Enter the choice: ") # Write chinese or abbr map conf in PUBLISHER_NAME_MAP.json
+    print '\nWhich output mode do you want?\n\n'\
+        '1. write chinese directly\n'\
+        '2. write abbreviation defined in config\n'
+    outputMode = raw_input('Enter the choice: ') # Write chinese or abbr map conf in PUBLISHER_NAME_MAP.json
     KNSHCrawler.setOutputMode(outputMode)
 
     if int(crawlMode) == 1:
@@ -60,12 +60,12 @@ class crawler:
         print 'Crawler start...\n'
         for semester in semesterList:
             for country in countryList:
-                schooList = self.getSchoolList(semester["semesterID"].encode('utf-8'),country["countryID"].encode('utf-8'))
+                schooList = self.getSchoolList(semester['semesterID'].encode('utf-8'),country['countryID'].encode('utf-8'))
                 for school in schooList:
-                    gradeList = self.__getGradeRange(semester["semesterID"])
+                    gradeList = self.__getGradeRange(semester['semesterID'])
                     for grade in gradeList:
-                        bookList = self.getBook(school["schoolID"].encode('utf-8'),semester["semesterID"].encode('utf-8'),country["countryID"].encode('utf-8'),grade)
-                        self.__printFinalResultText(semester["semesterText"],country["countryName"], school["schoolAddr"], grade, bookList)
+                        bookList = self.getBook(school['schoolID'].encode('utf-8'),semester['semesterID'].encode('utf-8'),country['countryID'].encode('utf-8'),grade)
+                        self.__printFinalResultText(semester['semesterText'],country['countryName'], school['schoolAddr'], grade, bookList)
                         
     def crawlByUserDefine(self):
         with open('conf/courseFilter.json') as fp:
@@ -73,40 +73,39 @@ class crawler:
         
         print 'Fetching semester && country information...\n'
         semesterList, countryList = self.getAllSemesterAndCountry()
+        
+        # Ask request semester
         semesterList = self.__askSemester(semesterList)
-
-        printUnicodeObj(countryList)
+        
+        # Ask request country
         isAllCountry, countryList = self.__askCountry(countryList)
-        printUnicodeObj(countryList)
-
-        # return
 
         print 'Crawler start...\n'
         for semester in semesterList:
-            countryIdStr = 'ALL' if isAllCountry else ''.join(map(lambda x: x["countryID"], countryList))
-            outputFileName = '%s_%s.csv' % (semester["semesterText"],countryIdStr)
+            countryIdStr = 'ALL' if isAllCountry else ''.join(map(lambda x: x['countryID'], countryList))
+            outputFileName = '%s_%s.csv' % (semester['semesterText'],countryIdStr)
             # print outputFileName
             # return
-            csvFp = csv.writer(open( outputFileName, "wb"))
+            csvFp = csv.writer(open( outputFileName, 'wb'))
 
             # Write title info
-            self.__writeCSVTitle(courseFilter,semester["semesterID"],csvFp)            
+            self.__writeCSVTitle(courseFilter,semester['semesterID'],csvFp)            
             for country in countryList:
-                schooList = self.getSchoolList(semester["semesterID"].encode('utf-8'),country["countryID"].encode('utf-8'))
+                schooList = self.getSchoolList(semester['semesterID'].encode('utf-8'),country['countryID'].encode('utf-8'))
                 for school in schooList:
                     # 縣市名稱 | 學校名稱
-                    csvRow = [country["countryName"] ,school["schoolAddr"].split(" ")[0]]
-                    gradeList = self.__getGradeRange(semester["semesterID"])
+                    csvRow = [country['countryName'] ,school['schoolAddr'].split(' ')[0]]
+                    gradeList = self.__getGradeRange(semester['semesterID'])
                     for grade in gradeList:
-                        bookList = self.getBook(school["schoolID"].encode('utf-8'),semester["semesterID"].encode('utf-8'),country["countryID"].encode('utf-8'),grade)
+                        bookList = self.getBook(school['schoolID'].encode('utf-8'),semester['semesterID'].encode('utf-8'),country['countryID'].encode('utf-8'),grade)
                         # Filter bookList  
-                        schoolType = self.__detectSchoolType(semester["semesterID"])
+                        schoolType = self.__detectSchoolType(semester['semesterID'])
                         selectedCourse = courseFilter[schoolType][str(grade)]    
-                        bookList = filter(lambda x: x["courseName"] in selectedCourse ,bookList)
+                        bookList = filter(lambda x: x['courseName'] in selectedCourse ,bookList)
                         
                         # Append bookList in courseFilter setting order
                         for selCourseName in courseFilter[schoolType][str(grade)]:
-                            publisher = filter(lambda bookItem: bookItem["courseName"] == selCourseName ,bookList)[0]["publisherName"]
+                            publisher = filter(lambda bookItem: bookItem['courseName'] == selCourseName ,bookList)[0]['publisherName']
                             if self.outputMode == 1:
                                 csvRow.append(publisher)
                             elif self.outputMode == 2:    
@@ -114,7 +113,7 @@ class crawler:
                                 csvRow.append(publisherAbbr[0]) if len(publisherAbbr) > 0 else csvRow.append("")
                                 
                                 # csvRow.append(publisherAbbr)
-                        self.__printFinalResultText(semester["semesterText"],country["countryName"], school["schoolAddr"], grade, bookList)
+                        self.__printFinalResultText(semester['semesterText'],country['countryName'], school['schoolAddr'], grade, bookList)
                     csvFp.writerow(csvRow)
         print 'Success!'
 
@@ -123,7 +122,7 @@ class crawler:
         # First row => |  |  | 一年級 | 二年級 | 三年級 | 四年級 | 五年級 | 六年級
         row = ["",""] # for 縣市名稱 | 學校名稱
         for grade, selectedCourse in courseFilter[schoolType].items():
-            row.append(convertNumToChinese(grade) + "年級")
+            row.append(convertNumToChinese(grade) + '年級')
             for x in xrange(1,len(selectedCourse)):
                 row.append("")
         csvFp.writerow(row)
@@ -144,16 +143,16 @@ class crawler:
     def __askSemester(self, semesterList):
         print 'Please choose the semester type you want to crawl\n'
         for idx, semester in enumerate(semesterList):
-            print str(idx) + ". " + semester["semesterText"]
-        selSemesterIdxStr = raw_input("\nEnter the choice"\
-                                    " (use \',\' for multiple choice'): ")
-        selSemesterIdxArr = map(lambda x: int(x) ,selSemesterIdxStr.split(","))
+            print str(idx) + '. ' + semester['semesterText']
+        selSemesterIdxStr = raw_input('\nEnter the choice'\
+                                    ' (use "," for multiple choice): ')
+        selSemesterIdxArr = map(lambda x: int(x) ,selSemesterIdxStr.split(','))
         return [ x for _,x in filter(lambda (i,x): i in selSemesterIdxArr , enumerate(semesterList))]
 
     def __askCountry(self, countryList):
         print 'Please choose the country\n'
         for idx, country in enumerate(countryList):
-            print str(idx) + ". " + country["countryName"]
+            print str(idx) + ". " + country['countryName']
         print '\nUse "-" for a range, "," for multiple choice'\
             '\nExample: 0-3,5,7,10-15'
         
@@ -180,9 +179,9 @@ class crawler:
     def __printFinalResultText(self, semesterText, countryName, schoolAddr, grade, bookList):
         print semesterText, '|', countryName, '|', schoolAddr.split(" ")[0], '|', grade, '年級'
         for row in bookList:
-            if not row["publisherName"]:
-                row["publisherName"] = "未提供"
-            print row["courseName"], '|' , row["publisherName"]
+            if not row['publisherName']:
+                row['publisherName'] = '未提供'
+            print row['courseName'], '|' , row['publisherName']
         print '----------------------------------------------------'    
 
     def __getGradeRange(self,semesterID):
@@ -203,8 +202,8 @@ class crawler:
 
         # Get Data
         htmlSoup, response  = self.__getDataByHttpPost()
-        semesterDOM = htmlSoup.find_all(attrs={"name": "sel1"})[0].find_all('option')
-        countryDOM = htmlSoup.find_all(attrs={"name": "sel2"})[0].find_all('option')
+        semesterDOM = htmlSoup.find_all(attrs={'name': 'sel1'})[0].find_all('option')
+        countryDOM = htmlSoup.find_all(attrs={'name': 'sel2'})[0].find_all('option')
 
         # Process semester content
         for row in semesterDOM:
@@ -233,7 +232,7 @@ class crawler:
         # Get Data
         paramsObj = {'hidsel1': semesterID, 'hidsel2': countryID}
         htmlSoup, response  = self.__getDataByHttpPost(paramsObj)
-        schoolListDOM = htmlSoup.find_all(attrs={"name": "sel0"})[0].find_all('option')
+        schoolListDOM = htmlSoup.find_all(attrs={'name': 'sel0'})[0].find_all('option')
         
         # Process content
         for row in schoolListDOM:
@@ -252,7 +251,7 @@ class crawler:
         # Get data
         paramsObj = {'sel0': schoolID, 'sel1': semesterID, 'sel2': countryID, 'sel4': grade, 'hidsubmited':'Y' }
         htmlSoup, response  = self.__getDataByHttpPost(paramsObj)
-        bookDOM = htmlSoup.find_all(id="table_1")[0]
+        bookDOM = htmlSoup.find_all(id='table_1')[0]
 
         # Process content
         publisherMap = [] # [index: 'publisherName',...]
@@ -267,9 +266,9 @@ class crawler:
                 eachCourseBook = {'publisherName': '' , 'courseName': '' }
                 for idx,courseCol in enumerate(row.find_all('td')):
                     if idx == 0:
-                        eachCourseBook["courseName"] = courseCol.get_text()
+                        eachCourseBook['courseName'] = courseCol.get_text()
                     elif (idx != 0) and len(courseCol.contents) > 0:
-                        eachCourseBook["publisherName"] = publisherMap[idx]
+                        eachCourseBook['publisherName'] = publisherMap[idx]
                 result.append(eachCourseBook)           
         # printUnicodeObj(result)
         return result        
@@ -277,9 +276,9 @@ class crawler:
     # Return : BeautifulSoup object
     def __getDataByHttpPost(self,paramsObj = {}):   
         params =  urllib.urlencode(paramsObj)
-        headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+        headers = {'Content-type': 'application/x-www-form-urlencoded', 'Accept': 'text/plain'}
         conn = httplib.HTTPSConnection("www.knsh.com.tw")
-        conn.request("POST", "/_KNSH/Version.asp?go_Sub_Topic=06", params, headers)
+        conn.request('POST', '/_KNSH/Version.asp?go_Sub_Topic=06', params, headers)
         response = conn.getresponse()
         # print response.status, response.reason
         data = response.read()
@@ -287,25 +286,25 @@ class crawler:
         return soup, response
 
 def convertNumToChinese(str):
-    if str == "1" or str == 1:
-        return "一"
-    elif str == "2" or str == 2:
-        return "二"
-    elif str == "3" or str == 3:
-        return "三"
-    elif str == "4" or str == 4:
-        return "四"
-    elif str == "5" or str == 5:
-        return "五"
-    elif str == "6" or str == 6:
-        return "六"
+    if str == '1' or str == 1:
+        return '一'
+    elif str == '2' or str == 2:
+        return '二'
+    elif str == '3' or str == 3:
+        return '三'
+    elif str == '4' or str == 4:
+        return '四'
+    elif str == '5' or str == 5:
+        return '五'
+    elif str == '6' or str == 6:
+        return '六'
 
 def printUnicodeObj(obj, prettify = True):
     if prettify:
         for v in obj:
-            print repr(v).decode("unicode-escape")
+            print repr(v).decode('unicode-escape')
     else:
-        print repr(obj).decode("unicode-escape")
+        print repr(obj).decode('unicode-escape')
 
 if __name__ == '__main__':
     main()

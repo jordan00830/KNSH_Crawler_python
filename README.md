@@ -2,10 +2,10 @@
 
 ### install beautiful soup python pkg
 ```sh
-    sudo pip install beautifulsoup4
+$ sudo pip install beautifulsoup4
 ```
 
 ### Run it
 ```sh
-    python crawler.py
+$ python crawler.py
 ```
