@@ -75,9 +75,19 @@ class crawler:
         semesterList, countryList = self.getAllSemesterAndCountry()
         semesterList = self.__askSemester(semesterList)
 
+        printUnicodeObj(countryList)
+        isAllCountry, countryList = self.__askCountry(countryList)
+        printUnicodeObj(countryList)
+
+        # return
+
         print 'Crawler start...\n'
         for semester in semesterList:
-            csvFp = csv.writer(open( semester["semesterText"] + ".csv", "wb"))
+            countryIdStr = 'ALL' if isAllCountry else ''.join(map(lambda x: x["countryID"], countryList))
+            outputFileName = '%s_%s.csv' % (semester["semesterText"],countryIdStr)
+            # print outputFileName
+            # return
+            csvFp = csv.writer(open( outputFileName, "wb"))
 
             # Write title info
             self.__writeCSVTitle(courseFilter,semester["semesterID"],csvFp)            
@@ -106,8 +116,8 @@ class crawler:
                                 # csvRow.append(publisherAbbr)
                         self.__printFinalResultText(semester["semesterText"],country["countryName"], school["schoolAddr"], grade, bookList)
                     csvFp.writerow(csvRow)
+        print 'Success!'
 
-    
     def __writeCSVTitle(self,courseFilter,semesterID,csvFp):
         schoolType = self.__detectSchoolType(semesterID)        
         # First row => |  |  | 一年級 | 二年級 | 三年級 | 四年級 | 五年級 | 六年級
@@ -140,6 +150,32 @@ class crawler:
         selSemesterIdxArr = map(lambda x: int(x) ,selSemesterIdxStr.split(","))
         return [ x for _,x in filter(lambda (i,x): i in selSemesterIdxArr , enumerate(semesterList))]
 
+    def __askCountry(self, countryList):
+        print 'Please choose the country\n'
+        for idx, country in enumerate(countryList):
+            print str(idx) + ". " + country["countryName"]
+        print '\nUse "-" for a range, "," for multiple choice'\
+            '\nExample: 0-3,5,7,10-15'
+        
+        selCountryIdxStr = raw_input('\nEnter the choice'\
+                                  ' (press Enter directly for all country): ')    
+        if selCountryIdxStr:
+            selCountryIdxArr = []
+            selCountryIdxArrTmp = map(lambda x: x, selCountryIdxStr.split(','))
+            for selIdx in selCountryIdxArrTmp:
+                # range value
+                if '-' in selIdx:
+                    startIdx,endIdx = selIdx.split('-')
+                    for rangeIdx in range(int(startIdx),int(endIdx)+1):
+                        selCountryIdxArr.append(rangeIdx)
+                # single value
+                else:
+                    selCountryIdxArr.append(selIdx)      
+            # convert into integer
+            selCountryIdxArr = [int(x) for x in selCountryIdxArr]
+            return False, [ x for _,x in filter(lambda (i,x): i in selCountryIdxArr , enumerate(countryList))]
+        else:
+            return True, countryList
 
     def __printFinalResultText(self, semesterText, countryName, schoolAddr, grade, bookList):
         print semesterText, '|', countryName, '|', schoolAddr.split(" ")[0], '|', grade, '年級'
